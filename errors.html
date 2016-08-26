@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/styles/shCore.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/styles/shThemeDefault.min.css" rel="stylesheet" type="text/css" />
+    <title>Грешки</title>
+    <style>
+      body {
+        width: 768px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      a {
+        color: blue;
+        cursor: pointer;
+      }
+
+      a[id] {
+        display: block;
+        font-size: 2rem;
+        cursor: pointer;
+        color: initial;
+        margin-top: 1rem;
+      }
+
+      .syntaxhighlighter {
+        border: 1px solid black;
+        padding: 10px;
+      }
+
+      .syntaxhighlighter:hover {
+        border: 1px solid blue;
+        cursor: pointer;
+      }
+
+      .syntaxhighlighter .toolbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Грешки</h1>
+    <a id="error1">1.</a>
+    <pre class="brush: html">
+      &lt;body&gt;
+        <h1>Заглавие</h1>
+        <style>
+          ...
+        </style>
+      &lt;/body&gt;
+    </pre>
+    <a onclick="toggleSolution(1)">Решение</a>
+    <div id="1" style="display: none;">
+      <p><strong>Обяснение:</strong> &lt;style&gt; таг може да стои само в &lt;head&gt; таг, а не в &lt;body&gt;</p>
+      <pre class="brush: html">
+        &lt;head&gt;
+          <style>
+            ...
+          </style>
+        &lt;/head&gt;
+        &lt;body&gt;
+          <h1>Заглавие</h1>
+        &lt;/body&gt;
+      </pre>
+    </div>
+
+    <a id="error2">2.</a>
+    <pre class="brush: html">
+      &lt;body&gt;
+        <center>Съдържание</center>
+      &lt;/body&gt;
+    </pre>
+    <a onclick="toggleSolution(2)">Решение</a>
+    <div id="2" style="display: none;">
+      <p><strong>Обяснение:</strong> &lt;center&gt; тага (за центриране на съдържание) се поддържа от браузърите, но HTML5 стандарта препоръчва за центиране да се използва CSS</p>
+      <pre class="brush: html">
+        &lt;body style="text-align: center;"&gt;
+          Съдържание
+        &lt;/body&gt;
+      </pre>
+    </div>
+
+    <a id="error3">3.</a>
+    <pre class="brush: html">
+&lt;body
+style=" background-image: url('image.png')  "&gt; ;
+    </pre>
+    <a onclick="toggleSolution(3)">Решение</a>
+    <div id="3" style="display: none;">
+      <p><strong>Обяснение:</strong> Грешка няма, но визуално е добре всичко да е на един ред, без излишни празни места, а символа ";" трябва да е вътре в кавичките, а не извън тях</p>
+      <pre class="brush: html">
+        &lt;body style="background-image: url('image.png');"&gt;
+      </pre>
+    </div>
+
+    <a id="error4">4.</a>
+    <pre class="brush: html">
+      &lt;!текст!&gt;
+    </pre>
+    <a onclick="toggleSolution(4)">Решение</a>
+    <div id="4" style="display: none;">
+      <p><strong>Обяснение:</strong> Такъв таг не съществува, вероятно е трябвало да бъде коментар (както е показано в решението)</p>
+      <pre class="brush: html">
+        &lt;!-- !текст! --&gt;
+      </pre>
+    </div>
+
+    <a id="error5">5.</a>
+    <pre class="brush: html">
+      &lt;img src="image.png"&gt;
+    </pre>
+    <a onclick="toggleSolution(5)">Решение</a>
+    <div id="5" style="display: none;">
+      <p><strong>Обяснение:</strong> Всички &lt;img&gt; тагове е добре да имат "/" в края, тъй като нямат затварящ таг (т.е. няма &lt;/img&gt;). По-важното е, че "alt" атрибута е задължителен (използва се от търсещите ботове или хората със специални потребности за идентифициране на снимката, понеже те не виждат какво има изобразено на нея)</p>
+      <pre class="brush: html">
+        &lt;img src="image.png" alt="снимка" /&gt;
+      </pre>
+    </div>
+
+    <a id="error6">6.</a>
+    <pre class="brush: html">
+      &lt;html&gt;
+      ...
+      &lt;/html/&gt;
+    </pre>
+    <a onclick="toggleSolution(6)">Решение</a>
+    <div id="6" style="display: none;">
+      <p><strong>Обяснение:</strong> Няма такъв затварящ таг &lt;/html/&gt;, правилният вариант е &lt;/html&gt;</p>
+      <pre class="brush: html">
+        &lt;html&gt;
+        ...
+        &lt;/html&gt;
+      </pre>
+    </div>
+
+    <a id="error7">7.</a>
+    <pre class="brush: html">
+      &lt;p&gt;Текст
+      &lt;p&gt;Друг тест&lt;/p&gt;&lt;/p&gt;
+    </pre>
+    <a onclick="toggleSolution(7)">Решение</a>
+    <div id="7" style="display: none;">
+      <p><strong>Обяснение:</strong> Неправилно затворени &lt;p&gt; тагове - веднъж затварящият таг липсва, а след това има два затварящи тага вместо един</p>
+      <pre class="brush: html">
+        <p>Текст</p>
+        <p>Друг тест</p>
+      </pre>
+    </div>
+
+    <a id="error8">8.</a>
+    <pre class="brush: html">
+      &lt;body&gt;
+        ...
+      &lt;/body&gt;
+      <footer>Текст</footer>
+    </pre>
+    <a onclick="toggleSolution(8)">Решение</a>
+    <div id="8" style="display: none;">
+      <p><strong>Обяснение:</strong> &lt;footer&gt; тага стои винаги в &lt;body&gt; тага, не извън него</p>
+      <pre class="brush: html">
+        &lt;body&gt;
+          ...
+          <footer>Текст</footer>
+        &lt;/body&gt;
+      </pre>
+    </div>
+
+    <a id="error9">9.</a>
+    <pre class="brush: html">
+      &lt;img src="img.png" align="left" border="2"&gt;
+    </pre>
+    <a onclick="toggleSolution(9)">Решение</a>
+    <div id="9" style="display: none;">
+      <p><strong>Обяснение:</strong> Отново липсва "alt" атрибут, а за да се постигне ляво подравняване и 2px рамка около картинката HTML5 стандарта препоръчва да не се използват остарелите "align" и "border" атрибути, а да се ползва CSS</p>
+      <pre class="brush: html">
+        &lt;img src="img.png" alt="снимка" style="float: left; border: 2px solid #000;" /&gt;
+      </pre>
+    </div>
+
+    <a id="error10">10.</a>
+    <pre class="brush: html">
+      &lt;ol&gt;
+        <li>Текст 1</li> <br>
+        <li>Текст 2</li>
+
+      <p>Друг текст</p>
+    </pre>
+    <a onclick="toggleSolution(10)">Решение</a>
+    <div id="10" style="display: none;">
+      <p><strong>Обяснение:</strong> &lt;ol&gt; тага трябва да се затвори, а отделно от това между &lt;li&gt; таговете не може да има нищо друго, включително &lt;br&gt; тагове</p>
+      <pre class="brush: html">
+        <ol>
+          <li style="margin-bottom: 20px;">Текст 1</li>
+          <li>Текст 2</li>
+        </ol>
+        <p>Друг текст</p>
+      </pre>
+    </div>
+
+    <a id="error11">11.</a>
+    <pre class="brush: html">
+      <b>&lt;input type=button value='Send'&gt;</b>
+    </pre>
+    <a onclick="toggleSolution(11)">Решение</a>
+    <div id="11" style="display: none;">
+      <p><strong>Обяснение:</strong> За да се удебели шрифта на бутона трябва да се използва CSS, а не &lt;b&gt; таг, отделно от това е добре стойностите на всички атрибути да са в кавички, а накрая е добре и да затворим тага с "/"</p>
+      <pre class="brush: html">
+        &lt;input type='button' value='Send' style='font-weight: bold;' /&gt;
+      </pre>
+    </div>
+
+    <a id="error12">12.</a>
+    <pre class="brush: html">
+      <input type="credit card" name="Credit Card" value="xxxx-xxxx-xxxx-xxxx">
+    </pre>
+    <a onclick="toggleSolution(12)">Решение</a>
+    <div id="12" style="display: none;">
+      <p><strong>Обяснение:</strong> За съжаление няма input поле от тип "credit card", отделно от това е добре в името да няма празни места, а вместо да се задава стойност на полето по подразбиране, която потребителя ще трябва да изтрие, то по-добре да се сложи "placeholder", който ще се автоматично ще се самоизтрие когато потребителя започне да пише нещо в полето</p>
+      <pre class="brush: html">
+        <input type="text" name="credit_card" placeholder="xxxx-xxxx-xxxx-xxxx" />
+      </pre>
+    </div>
+
+    <a id="error13">13.</a>
+    <pre class="brush: html">
+      ... някакъв &lt;b&gt;&lt;i&gt;текст&lt;/b&gt;&lt;/i&gt; тук ...
+    </pre>
+    <a onclick="toggleSolution(13)">Решение</a>
+    <div id="13" style="display: none;">
+      <p><strong>Обяснение:</strong> Неправилна подредба на затварящите &lt;/b&gt; и &lt;/i&gt; тагове</p>
+      <pre class="brush: html">
+        ... някакъв <b><i>текст</i></b> тук ...
+      </pre>
+    </div>
+
+    <a id="error14">14.</a>
+    <pre class="brush: html">
+      &lt;html&gt;
+      ...
+      &lt;body&gt;
+      ...
+      &lt;/body&gt;
+      &lt;/html&gt;
+      ...
+      &lt;/body&gt;
+      &lt;/html&gt;
+    </pre>
+    <a onclick="toggleSolution(14)">Решение</a>
+    <div id="14" style="display: none;">
+      <p><strong>Обяснение:</strong> Ненужни затварящи &lt;/body&gt; и &lt;/html&gt; тагове</p>
+      <pre class="brush: html">
+        &lt;html&gt;
+          ...
+          &lt;body&gt;
+          ...
+          &lt;/body&gt;
+        &lt;/html&gt;
+      </pre>
+    </div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushCss.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushXml.min.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false; SyntaxHighlighter.all()</script>
+    <script type="text/javascript">
+      function toggleSolution(num) {
+        el = document.getElementById(num)
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+      }
+    </script>
+  </body>
+</html>
