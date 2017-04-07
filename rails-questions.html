@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="utf-8">
+    <title>Често задавани въпроси</title>
+    <style>
+      body {
+        font-size: 20px;
+        margin: 2rem 10rem;
+      }
+      summary {
+        cursor: pointer;
+        background-color: #ccc;
+      }
+      summary:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <strong>Създайте приложението:</strong>
+    <pre>
+      rails new sandbox
+      cd sandbox
+      bundle install
+      rails g scaffold Department name:string
+      rails g scaffold Employee name:string phone:string department:references
+      rake db:migrate
+    </pre>
+    <strong>Въведете малко примерни данни:</strong>
+    <pre>
+      department_one = Department.create(name: 'Sales')
+      department_two = Department.create(name: 'Marketing')
+      Department.create(name: 'Financial')
+
+      Employee.create([{name: "Mike", phone: "111111111", department: department_one},
+                       {name: "Nina", phone: "222222222", department: department_one},
+                       {name: "John", phone: "333333333", department: department_one}])
+      Employee.create(name: "Tom", phone: "111111111", department: department_two)
+    </pre>
+    <strong>Отговорете на въпросите:</strong>
+    <details>
+      <summary>1. Каква е разликата между <strong>find()</strong> и <strong>find_by()</strong>?</summary>
+      <p>Open the Rails console and type these commands.</p>
+      <pre>
+        Employee.find(1)
+        Employee.find_by(id: 1)
+      </pre>
+      <p>As you can see both find_by() and find() return the first record when its found. The difference is what they return when a record is not found. find_by() returns nil while find() returns ActiveRecord::RecordNotFound exception. The additional difference between find() and find_by() is that find could only be used to search by primary key (usually the ‘id’) while the find_by() requires and searches by attribute (either passed as hash like Employee.find_by(name: ‘Mike’) or using the Employee.find_by_name(‘Mike’) method).</p>
+    </details>
+    <details>
+      <summary>2. Каква е разликата между <strong>member</strong> и <strong>collection</strong> routes?</summary>
+      <p>Let’s edit `config/routes.rb` file. Replace `resources :employees` with:</p>
+      <pre>
+        resources :employees do
+          member do
+            get :preview
+          end
+
+          collection do
+            get :search
+          end
+        end
+      </pre>
+      <p>Let’s see what routes it creates. A member route acts on a specific resource so it requires id, while a collection route acts on a collection of resources. Preview displays specific employee (a single object) when Search displays all employees (a collection of objects). The rest of the eight routes are created by the resources keyword. A resourceful route provides a mapping between HTTP verbs and URLs and controller actions. All above routes are mapping to the Employees controller.</p>
+    </details>
+    <details>
+      <summary>3. Какъв е т. нар. <strong>N+1</strong> проблем и как може да се реши?</summary>
+      <p>First, in app/views/employees/index.html.erb file replace this piece of code `<%= employee.department %>` with `<%= employee.department.name %>` and check the queries in the console. In short words the N+1 problem is caused when you need to make N+1 SQL queries (where N is the number of items) to fetch the parent, then any number of child queries to fetch the other records. Every unnecessary query slows down our application, so it’s very important to solve this problem. The solution to the N+1 problem is eager loading. This makes sure you don’t end up running unnecessary queries while looping through an object. So how can you remove it? It’s really simple. In `app/controllers/employees_controller.rb` let’s replace this piece of code:</p>
+      <pre>
+        def index
+          @employees = Employee.all
+        end
+
+        with this:
+
+        def index
+          @employees = Employee.all.includes(:department)
+        end
+      </pre>
+      <p>It’s because includes() method specify relationships to be included in the result set. That’s why the app calls database queries twice, only one query to get all employees and second query to get all departments of employees. So as you can see eager loading improves performance by cutting down the number of SQL queries. Important: You have to be aware that eager loading might not be the solution for the N+1 problem in every case. Occasionally some complicated situations appear. For example, you can have a weird relations connection, in which eager loading won’t be solution.</p>
+    </details>
+    <details>
+      <summary>4. Какво са т. нар. <strong>polymorphic associations</strong>?</summary>
+      <p>Polymorphism is the provision of a single interface to entities of different types. With polymorphic associations, a model can belong to more than one other model, on a single association. For example, you can have a comment model that belongs to either an employee model or a department model. Let’s see how we can implement it! First we will need to create Comment model, because it will be the model which declares the polymorphic interface. It has to have both a foreign key column and a type column:</p>
+      <pre>
+        rails g model Comment description:string commentable_id:integer commentable_type:string
+        rake db:migrate
+      </pre>
+      <p>Next, we have to declare associations in models. Add to the Department model and to the Employee model after the class declaration this piece of code:</p>
+      <pre>
+        has_many :comments, as: :commentable
+      </pre>
+      <p>And this piece of code to the Comment model:</p>
+      <pre>
+        belongs_to :commentable, polymorphic: true
+      </pre>
+      <p>After that, let’s reopen the Rails console and check out how polymorphic association works:</p>
+      <pre>
+        e = Employee.first
+        comments = e.comments.create([{description: "Employee of year"},{description: "Great guy!"}] )
+        comments.pluck(:description, :commentable_type)
+
+        d = Department.first
+        comments = d.comments.create([{description: "My lovely department"}])
+        comments.pluck(:description, :commentable_type)
+      </pre>
+      <p>As you can see in our above example, after creating two comments for the employee, the field commentable_type in comment model is automatically set for the association model name (i.e. Employee). You can see that if you create comment for department, the field commentable_type will be set with the value “Department”.</p>
+    </details>
+    <details>
+      <summary>5. Каква е разликата между <strong>redirect_to</strong> и <strong>render</strong>?</summary>
+      <p>Render can be used in many ways, but it’s mainly used to render your html views. Calling render will create a full response that is sent back to the browser. For example add this line of code to the the show method in `app/controllers/employees_controller.rb` before the method end::</p>
+      <pre>
+        render "employees/edit"
+      </pre>
+      <p>Change it to:</p>
+      <pre>
+        redirect_to "https://www.google.com/"
+      </pre>
+      <p>And visit `http://localhost:3000/employees/1`</p>
+    </details>
+    <details>
+      <summary>6. Обяснете какво е <strong>MVC</strong>?</summary>
+      <p>The Model View Controller principle divides the work of an application into three separate but closely cooperative subsystems:</p>
+      <ul>
+        <li>Model – contains all business logic and data for the application</li>
+        <li>View – generates the user interface, which presents data to the user</li>
+        <li>Controller – is responsible for controlling the application logic and acts as the coordinator between the View and the Model</li>
+      </ul>
+    </details>
+    <details>
+      <summary>7. Обяснете какво е <strong>request - response</strong> цикъл и как протича той?</summary>
+      <p>Here is the request/response cycle:</p>
+      <img src="https://cdn.nopio.com/blog/wp-content/uploads/2017/04/CycleDiagram.png" alt="Request - responce cycle" />
+      <p>Let’s explain request/response flow in Rails:</p>
+      <ol>
+        <li>The user opens their browser and enters a URL.</li>
+        <li>The browser sends a GET request to the URL. The request hits the Rails Router (`config/routes.rb`).</li>
+        <li>The router receives the request information from the web server and based on that, decides which controller action should be called. If a request matches to any path in the routes file, the corresponding controller and action will be called.</li>
+        <li>The controller receives the parameters from the router and passes them into appropriate model methods.</li>
+        <li>The model queries a database to fetch data.</li>
+        <li>The Database returns stored data to the model.</li>
+        <li>The model manages the data and returns it to the controller.</li>
+        <li>The controller feeds the received data to the view.</li>
+        <li>The view renders the page as HTML, prepares a response and forwards it to the controller.</li>
+        <li>The controller forwards the ready response to the browser.</li>
+        <li>The browser displays a response to the user.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>8. Какви са предимствата в използването на <strong>ActiveRecord</strong> вместо обикновени SQL заявки?</summary>
+      <p>Here are the benefits:</p>
+      <ul>
+        <li>it’s really easy to go wrong during writing SQL queries</li>
+        <li>each different type of database usually has a slightly different flavour of SQL, so it could be really painful if, during work on a big app, you decide to switch to a different database</li>
+        <li>using Active Record reduces code significantly and makes it easier to read</li>
+        <li>using Active Record makes common operations simpler and easier than writing your own SQL statements</li>
+      </ul>
+      <p>Let’s compare Active Record query with raw SQL query in an example. Let’s find all employees whose department name is ‘Sales’ using ActiveRecord.</p>
+      <pre>
+        Employee.joins(:department).where(:departments => { name: "Sales" })
+      </pre>
+      <p>Using raw SQL</p>
+      <pre>
+        Employee.find_by_sql("select employees.* from  employees inner join departments on departments.id = employees.department_id where departments.name = 'Sales'")
+      </pre>
+    </details>
+    <details>
+      <summary>9. А кога не е добре да се използва <strong>ActiveRecord</strong>?</summary>
+      <p>Type in console and check the queries:</p>
+      <pre>
+        (1..10).each do
+          Department.create(name: 'Test')
+        end
+      </pre>
+      <p>Then also in console try executing this code and again check the queries:</p>
+      <pre>
+        Employee.all.each do |employee|
+          employee.update(department_id: 1)
+        end
+      </pre>
+      <p>To solve the <strong>second</strong> problem we might use ActiveRecord:</p>
+      <pre>
+        Employee.update_all(department_id: 1)
+      </pre>
+      <p>Or use raw SQL query:</p>
+      <pre>
+        ActiveRecord::Base.connection.execute('UPDATE employees SET department_id = 1')
+      </pre>
+      <p>To solve the first problem we need to use gems, Arel or execute the following raw SQL query:</p>
+      <pre>
+        ActiveRecord::Base.connection.execute("INSERT INTO departments (name, created_at, updated_at) VALUES ('some', '#{Time.now}', '#{Time.now}'), ('thing', '#{Time.now}', '#{Time.now}')")
+      </pre>
+    </details>
+    <details>
+      <summary>10. Каква е разликата между <strong>new</strong>, <strong>save</strong> и <strong>create</strong>?</summary>
+      <ul>
+        <li><strong>new</strong> – makes a new object but doesn’t save it to the database</li>
+        <li><strong>save</strong> – saves the model. If the model is new a record gets created in the database, otherwise the existing record gets updated.</li>
+        <li><strong>create</strong> – makes a new object and saves it to the database in one go</li>
+      </ul>
+    </details>
+    <details>
+      <summary>11. Какво са т. нар. <strong>ActiveRecord callbacks</strong> и дайте примери за такива?</summary>
+      <p>Callbacks are methods that get called at certain moments of an object’s life cycle. With callbacks it is possible to write code that will run whenever an Active Record object is created, saved, updated, deleted, validated, or loaded from the database. Here are some example of callbacks:</p>
+      <ul>
+        <li>before_validation</li>
+        <li>after_validation</li>
+        <li>before_save</li>
+        <li>around_save</li>
+        <li>before_create/update/destroy</li>
+        <li>around_create/update/destroy</li>
+        <li>after_create/update/destroy</li>
+        <li>after_save</li>
+        <li>after_commit/rollback</li>
+      </ul>
+      <p>More info could be found here: <a href="http://guides.rubyonrails.org/active_record_callbacks.html" target="_blank">http://guides.rubyonrails.org/active_record_callbacks.html</a> and here: <a href="http://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html" target="_blank">http://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html</a></p>
+      <p>For example add the following in `app/models/employee.rb`:</p>
+      <pre>
+        before_save :change_name
+
+        def change_name
+          self.name = "Zeus"
+        end
+      </pre>
+      <p>Then try to create an employee with name "Tom" and after that check what it name actually is:</p>
+      <pre>
+        Employee.create(name: "Tom", phone: "111111111", department: Department.last)
+      </pre>
+    </details>
+    <details>
+      <summary>12. Каква е разликата между <strong>destroy</strong> и <strong>delete</strong>?</summary>
+      <p>Both of these methods delete the record in the database. The different between them is that:</p>
+      <ul>
+        <li><strong>destroy</strong> – checks and deletes connected records if necessary and calls callbacks i.e. before_destroy, after_destroy etc.</li>
+        <li><strong>delete</strong> – doesn’t call callbacks and removes an object directly from the database.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>13. Каква е разликата между ActiveRecord relation метдите <strong>count</strong>, <strong>length</strong> и <strong>size</strong>?</summary>
+      <ul>
+        <li><strong>count</strong> – counts the number of elements using query with the SQL command ‘COUNT’ but the result is not stored internally during object life cycle. This means, each time we invoke this method, SQL query is performed again. You should use this method if you don’t have anything loaded.</li>
+        <li><strong>length</strong> – loads all objects just to count them and then return the result count. It should be used only if you have already loaded all entries to avoid another database query.</li>
+        <li><strong>size</strong> – returns the size of the collection. If a collection is loaded, it will count its elements without any database query; but if a collection is not loaded, it will perform an additional query.</li>
+      </ul>
+      <p>So in general we usually need to use <strong>size</strong></p>
+    </details>
+    <details>
+      <summary>14. Каква е разликата между <strong>.nil?</strong>, <strong>.empty?</strong>, <strong>.blank?</strong>, <strong>.present?</strong> и <strong>.presence</strong> ?</summary>
+      <ul>
+        <li><strong>nil?</strong> – tests whether the object is exactly nil, that is whether it is an instance of NilClass</li>
+        <li><strong>empty?</strong> – can be used on strings, arrays and hashes and returns true if they don’t contain elements. If called on something that is nil, it will throw a NoMethodError.</li>
+        <li><strong>blank?</strong> – an object is blank if it’s false, empty, or a whitespace string.</li>
+        <li><strong>present?</strong> – An object is present if it’s not blank.</li>
+        <li><strong>presence</strong> – Returns nil if the object is empty/blank/nil or the value of the object if it is not</li>
+      </ul>
+      <p>Here is the table with all the cases:</p>
+      <img src="https://cdn.nopio.com/blog/wp-content/uploads/2017/04/Zrzut-ekranu-2017-04-03-o-13.11.15.png?iv=179" alt="Ruby methods" />
+    </details>
+    <h4>Източник: <a href="https://www.nopio.com/blog/ruby-rails-popular-job-interview-questions/" ref="nofollow" target="_blank">https://www.nopio.com/blog/ruby-rails-popular-job-interview-questions/</a>
+  </body>
+</html>
